@@ -1,0 +1,1 @@
+parser.py is a program for parsing the data in the docx file and putting them down in the .xlsx specified by the user, in the desired order.
