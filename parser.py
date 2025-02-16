@@ -16,14 +16,31 @@ def main():
         meanings = []
         parse_meanings(paragraph.text, meanings)
         
-        meaning_counter = 0
-        for text in meanings:
+        for meaning_counter, text in enumerate(meanings):
             if meaning_counter == 0:
-                parser_first_part(text, excel_sheet, row, word_column, meaning_column, synonym_column, examples_column)    
+                word, meaning, synonym, examples = parser_first_part(text)
+                if len(meanings) > 1:
+                    meaning = '1.' + meaning
+                    if synonym:
+                        synonym = '1.' + synonym
+                    if examples:
+                        examples = '1.' + examples
             else:
-                parse_remainder(text, excel_sheet, row, meaning_column, synonym_column, examples_column)
-            meaning_counter += 1
-            row += 1
+                returned_meaning, returned_synonym, returned_examples = parse_remainder(text)
+                meaning = meaning + f'\n{meaning_counter + 1}.' + returned_meaning
+                if returned_synonym:
+                    if synonym:
+                        synonym = synonym + f'\n{meaning_counter + 1}.' + returned_synonym
+                    else:
+                        synonym = f'\n{meaning_counter + 1}.' + returned_synonym
+                if returned_examples:
+                    if examples:
+                        examples = examples + f'\n{meaning_counter + 1}.' + returned_examples
+                    else:
+                        examples = f'\n{meaning_counter + 1}.' + returned_examples
+
+        fill_row(excel_sheet, row, word_column, meaning_column, synonym_column, examples_column, word, meaning, synonym, examples)
+        row += 1
 
     excel_book.save(final_xlsx_doc)
 
@@ -46,36 +63,36 @@ def parse_meanings(text, meanings):
         meanings.append(text_)
         parse_meanings(remainder, meanings)
 
-def parser_first_part(text, excel_sheet, row, word_column, meaning_column, synonym_column, examples_column):
+def parser_first_part(text):
     '''parses text and enters them into the xlsx file'''
 
     matches = re.search(r"^(.+?)\. *(.+?) *(?:\(مترادف *: *(.+)\))? *(?::) *(«.+)$", text.strip())
     if matches:
         word, meaning, synonym, examples = matches.groups()
-        excel_sheet[f'{word_column}{row}'].value = word
-        excel_sheet[f'{meaning_column}{row}'].value = meaning
-        excel_sheet[f'{synonym_column}{row}'].value = synonym
-        excel_sheet[f'{examples_column}{row}'].value = examples
-
+        return word, meaning, synonym, examples
+        
     elif not matches:
         matches = re.search(r"^(.+?)\. *(.+)$", text.strip())
         if matches:
             word, meaning = matches.groups()
-            excel_sheet[f'{word_column}{row}'].value = word
-            excel_sheet[f'{meaning_column}{row}'].value = meaning
+            return word, meaning, None, None
 
 
-def parse_remainder (text, excel_sheet, row, meaning_column, synonym_column, examples_column):
+def parse_remainder (text):
     '''parses text and enters them into the xlsx file'''
 
     matches = re.search(r"^(.+?) *(?:\(مترادف *: *(.+)\))? *(?::) *(«.+)", text.strip())
     if matches:
         meaning, synonym, examples = matches.groups()
-        excel_sheet[f'{meaning_column}{row}'].value = meaning
-        excel_sheet[f'{synonym_column}{row}'].value = synonym
-        excel_sheet[f'{examples_column}{row}'].value = examples
+        return meaning, synonym, examples
     else:
-        excel_sheet[f'{meaning_column}{row}'].value = text
+        return text, None, None
+    
+def fill_row(excel_sheet, row, word_column, meaning_column, synonym_column, examples_column, word, meaning, synonym, examples):
+    excel_sheet[f'{word_column}{row}'].value = word
+    excel_sheet[f'{meaning_column}{row}'].value = meaning
+    excel_sheet[f'{synonym_column}{row}'].value = synonym
+    excel_sheet[f'{examples_column}{row}'].value = examples
 
 def arg_parser():
     '''parses the command line arguments.'''
