@@ -13,7 +13,9 @@ data is available in DOCX format but needs to be converted into a machine-
 readable spreadsheet for further processing or analysis.
 
 ## Usage
-python parser.py <docx_file> <xlsx_template> <sheet_name> <output_xlsx> <entry_column> <meaning_column> <synonym_column> <examples_column>
+```bash
+python parser.py [docx file] [xlsx template] [sheet name] [output xlsx] [entry column] [meaning column] [synonym column] [examples column]
+```
 
 ## Installation
 
